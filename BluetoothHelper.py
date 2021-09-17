@@ -4,15 +4,20 @@ from collections import deque
 from multiprocessing import Queue
 
 import threading
+
+import numpy as np
 from bleak import discover
 from bleak import BleakClient
 
 from bleak.backends.dotnet.client import BleakClientDotNet
+from collections import deque
 import struct
 SAMPLEFZ = 10
 SAMPRATE = 10
 DATASIZE = SAMPLEFZ * 60
 PLOTSIZE = SAMPLEFZ * 9
+
+dataQueue = deque(maxlen=20*DATASIZE)
 
 
 def bytearr2int(bytearray, len):
@@ -69,7 +74,7 @@ def callback(sender, data):
             if len(data) == 5:
                 print('肌电信号值：')
                 print(int(hex(data[3])+hex(data[2])[-2:], 16))
-                helper.dataQueue.append(int(hex(data[3])+hex(data[2])[-2:], 16))
+                dataQueue.append(int(hex(data[3])+hex(data[2])[-2:], 16))
 
 
 class BluetoothHelper(threading.Thread):
@@ -77,11 +82,10 @@ class BluetoothHelper(threading.Thread):
         threading.Thread.__init__(self)
         # 消息队列
         self.queue = Queue(maxsize=100)
-        # 数据
-        self.dataQueue = deque(maxlen=20 * DATASIZE)
         # 初次使用标志
         self.startFlag = 0
         self.Flag = True
+        self.connected = False
 
         # 蓝牙配置
         self.device_name = "LGT-233"
@@ -124,11 +128,9 @@ class BluetoothHelper(threading.Thread):
 
         self.bluetoothValue = 10
 
-
-    # def start(self):
-    #     loop = asyncio.new_event_loop()
-    #     loop.run_until_complete(self.run(loop))
-
+    def getEMGData(self, emgbt):
+        if emgbt:
+            return np.array(list(dataQueue))
 
     def setHealFre(self, fre):
         fre = fre//10
@@ -224,8 +226,8 @@ class BluetoothHelper(threading.Thread):
 
         print('try to connect to BLE 4.0')
         async with BleakClientDotNet(self.address, loop=loop) as client:
-            x = client.is_connected
-            print("Bluetooth Connected: {0}".format(x))
+            self.connected = client.is_connected
+            print("Bluetooth Connected: {0}".format(self.connected))
             await client.start_notify(self.UUID_READ, callback)
             try:
                 while self.Flag:

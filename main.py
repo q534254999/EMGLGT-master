@@ -409,11 +409,15 @@ class Model(threading.Thread):
             return lgtData
         else:
             if self.mode == "RELEASE":
-                # return np.zeros(DATASIZE)
-                if self.collecting is False:
-                    return np.zeros(DATASIZE)
-                curdata = np.array(self.conn[dataNo].get_data())
-                return curdata
+                # Todo
+                # 添加所有使用蓝牙集成的判断
+                if self.emgbt:
+                    return self.bluetoothHelper.getEMGData(self.emgbt)
+                else:
+                    if self.collecting is False:
+                        return np.zeros(DATASIZE)
+                    curdata = np.array(self.conn[dataNo].get_data())
+                    return curdata
 
             elif self.mode == "DEBUG":
                 # cur_time = time.time()
