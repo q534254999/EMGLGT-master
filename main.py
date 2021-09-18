@@ -658,12 +658,12 @@ class Controller(threading.Thread):
         self.flag = True
         time.sleep(2)
         # 开启蓝牙
-        if self.models.bluetoothHelper:
+        if self.models.openbt:
             self.models.bluetoothHelper.Flag = True
             self.models.bluetoothHelper.start()
             self.models.start()
         lgtInformation = {}
-        # 蓝牙开启标志
+        # 肌电传感器开启标志
         sensorStartFlag = [False] * SENSORNUM
         # startTime = time.time()
         t = 0
@@ -682,6 +682,8 @@ class Controller(threading.Thread):
 
             # 获取上下肢反馈数据
             try:
+                if not self.models.openLGT_5100:
+                    raise KeyError
                 lgtInformation = self.models.get_data(UPDOWNDEVICENO)
                 # print(lgtInformation)
                 self.view.showLabel(self.view.ui.max_pass_train_speed_val, lgtInformation['maxrace'])
