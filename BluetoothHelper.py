@@ -25,7 +25,6 @@ def bytearr2int(bytearray, len):
 
 
 def callback(sender, data):
-
     # data[i] 是 10进制
     print("接收数据长度:")
     print(len(data))
@@ -62,19 +61,20 @@ def callback(sender, data):
 
         elif hex(data[0]) == '0x90':
             if hex(data[3]) == '0x1':
-                print(str(data[2])+'通道错误', "开路报警")
+                print(str(data[2]) + '通道错误', "开路报警")
 
         elif hex(data[0]) == '0x91':
             if hex(data[3]) == '0x1':
-                print(str(data[2])+'通道错误', "参数错误")
+                print(str(data[2]) + '通道错误', "参数错误")
             elif hex(data[3]) == '0x2':
-                print(str(data[2])+'通道错误', "校验错误")
+                print(str(data[2]) + '通道错误', "校验错误")
 
         elif hex(data[0]) == '0x66':
             if len(data) == 5:
                 print('肌电信号值：')
-                print(int(hex(data[3])+hex(data[2])[-2:], 16))
-                dataQueue.append(int(hex(data[3])+hex(data[2])[-2:], 16))
+                print(int(hex(data[3]) + hex(data[2])[-2:], 16))
+                dataQueue.append(int(hex(data[3]) + hex(data[2])[-2:], 16))
+
 
 
 class BluetoothHelper(threading.Thread):
@@ -86,6 +86,7 @@ class BluetoothHelper(threading.Thread):
         self.startFlag = 0
         self.Flag = True
         self.connected = False
+        self.data = deque(maxlen=20 * DATASIZE)
 
         # 蓝牙配置
         self.device_name = "LGT-233"
@@ -128,9 +129,11 @@ class BluetoothHelper(threading.Thread):
 
         self.bluetoothValue = 10
 
+
     def getEMGData(self, emgbt):
         if emgbt:
-            return np.array(list(dataQueue))
+            self.data = dataQueue
+            return np.array(list(self.data))
 
     def setHealFre(self, fre):
         fre = fre//10
@@ -233,7 +236,7 @@ class BluetoothHelper(threading.Thread):
                 while self.Flag:
                     # 读取肌电信号
                     await client.start_notify(self.UUID_READ, callback)
-                    print(self.dataQueue)
+                    # print(self.getEMGData(True))
                     # 取消息（指令）队列中的指令
                     if not self.queue.empty():
                         cmd = self.queue.get()

@@ -328,7 +328,7 @@ class Model(threading.Thread):
         # 是否usb连接上下肢设备
         self.openLGT_5100 = True
         # 是否采用蓝牙传输肌电信号（肌电信号与电刺激合用蓝牙传输）
-        self.emgbt = False
+        self.emgbt = True
 
         # self.mode = "DEBUG"
         self.mode = "RELEASE"
@@ -534,7 +534,7 @@ class Model(threading.Thread):
             result['signals_variance'] = EMGPlot.variance(signals)
 
             result['fre_min'] = EMGPlot.frequence_min(signals)
-            result['fre_max'] = EMGPlot.frequence_max(signals)
+            # result['fre_max'] = EMGPlot.frequence_max(signals)
             result['fre_mean'] = EMGPlot.frequence_avg(signals)
 
             result['spectralentropy'] = EMGPlot.SpectralEntropy(signals, SUBFRAMESIZE)
@@ -579,6 +579,8 @@ class Model(threading.Thread):
     def stop(self):
         if self.bluetoothHelper:
             self.bluetoothHelper.stop()
+        if self.emgbt:
+            self.emgbt = False
         self.Flag = False
 
 
@@ -712,11 +714,14 @@ class Controller(threading.Thread):
                 # 对峰值信号滤波
                 filter_peak = []
                 filter_valley = []
+                if self.models.emgbt:
+                    self.models.collecting[sensor_i] = True
 
                 newdata = self.models.get_data(sensor_i)
 
                 if self.models.mode == 'DEBUG' or self.models.collecting[sensor_i]:
                     if len(newdata) > 0:
+
                         # 疲劳显示
                         # if t % 10 == 0:
                         #     curTime = time.time()
