@@ -326,7 +326,7 @@ class Model(threading.Thread):
         # 是否开启蓝牙控制电刺激
         self.openbt = True
         # 是否usb连接上下肢设备
-        self.openLGT_5100 = True
+        self.openLGT_5100 = False
         # 是否采用蓝牙传输肌电信号（肌电信号与电刺激合用蓝牙传输）
         self.emgbt = True
 
@@ -683,29 +683,29 @@ class Controller(threading.Thread):
             time.sleep(0.03)
 
             # 获取上下肢反馈数据
-            try:
-                if not self.models.openLGT_5100:
-                    raise KeyError
-                lgtInformation = self.models.get_data(UPDOWNDEVICENO)
-                # print(lgtInformation)
-                self.view.showLabel(self.view.ui.max_pass_train_speed_val, lgtInformation['maxrace'])
-                self.view.showLabel(self.view.ui.real_time_speed_val, lgtInformation['activespeed'])
-                self.view.showLabel(self.view.ui.left_symmetry_val, lgtInformation['leftSymmetryData'])
-                self.view.showLabel(self.view.ui.right_symmetry_val, lgtInformation['rightSymmetryData'])
-                self.view.showLabel(self.view.ui.muscle_tension_val, lgtInformation['musculartensionD'])
+            if self.models.openLGT_5100:
+                try:
+                    # if not self.models.openLGT_5100:
+                    lgtInformation = self.models.get_data(UPDOWNDEVICENO)
+                    # print(lgtInformation)
+                    self.view.showLabel(self.view.ui.max_pass_train_speed_val, lgtInformation['maxrace'])
+                    self.view.showLabel(self.view.ui.real_time_speed_val, lgtInformation['activespeed'])
+                    self.view.showLabel(self.view.ui.left_symmetry_val, lgtInformation['leftSymmetryData'])
+                    self.view.showLabel(self.view.ui.right_symmetry_val, lgtInformation['rightSymmetryData'])
+                    self.view.showLabel(self.view.ui.muscle_tension_val, lgtInformation['musculartensionD'])
 
-                self.view.showLabel(self.view.ui.train_time_val, lgtInformation['trainTimeSum'])
-                self.view.showLabel(self.view.ui.pass_train_time_val, lgtInformation['passiveTrainTime'])
-                self.view.showLabel(self.view.ui.active_train_time_val, lgtInformation['activeTrainTime'])
-                self.view.showLabel(self.view.ui.avg_power_val, lgtInformation['avgPower'])
-                self.view.showLabel(self.view.ui.peak_power_val, lgtInformation['peakPower'])
+                    self.view.showLabel(self.view.ui.train_time_val, lgtInformation['trainTimeSum'])
+                    self.view.showLabel(self.view.ui.pass_train_time_val, lgtInformation['passiveTrainTime'])
+                    self.view.showLabel(self.view.ui.active_train_time_val, lgtInformation['activeTrainTime'])
+                    self.view.showLabel(self.view.ui.avg_power_val, lgtInformation['avgPower'])
+                    self.view.showLabel(self.view.ui.peak_power_val, lgtInformation['peakPower'])
 
-                self.view.showLabel(self.view.ui.right_angle_val, lgtInformation['rightAngle'])
-                # 将信息更新到界面
-                self.view.showScene()
+                    self.view.showLabel(self.view.ui.right_angle_val, lgtInformation['rightAngle'])
+                    # 将信息更新到界面
+                    self.view.showScene()
 
-            except KeyError:
-                print("read lgt-5100 Error")
+                except KeyError:
+                    print("read lgt-5100 Error")
 
             # 获取每个传感器信息
             for sensor_i in range(SENSORNUM):
@@ -738,7 +738,9 @@ class Controller(threading.Thread):
                             self.view.showpg(self.view.originalsignal_plt, newdata[-PLOTSIZE:], sensor_i, 'red')
                             signals = self.models.get_filtered_signal(newdata)
                             signals_val = newdata[-1]
-                            angle = (lgtInformation['rightAngle'] + 180) % 360
+                            angle = 0
+                            if self.models.openLGT_5100:
+                                angle = (lgtInformation['rightAngle'] + 180) % 360
                             self.view.item_left.update_pram(angle, signals_val)
                             ElecData = newdata[-PLOTSIZE:]
                             # 检测是否改变了电刺激强度
@@ -824,7 +826,9 @@ class Controller(threading.Thread):
                             self.view.showpg(self.view.originalsignal_plt2, newdata[-PLOTSIZE:], sensor_i, 'blue')
                             signals = self.models.get_filtered_signal(newdata)
                             signals_val = newdata[-1]
-                            angle = lgtInformation['rightAngle']
+                            angle = 0
+                            if self.models.openLGT_5100:
+                                angle = lgtInformation['rightAngle']
                             self.view.item_right.update_pram(angle, signals_val)
 
                             ElecData = newdata[-PLOTSIZE:]
