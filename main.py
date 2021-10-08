@@ -550,7 +550,8 @@ class Model(threading.Thread):
 
     # 判断是否进行电刺激
     # spasmFlag 主被动标志 3：被动， 2：主动
-    def stimulusJudge(self, angle, signal_val, spasmFlag):
+    # TODO 修改电刺激函数
+    def stimulusJudge(self, angle, signal_val, spasmFlag=3):
         if 25 <= angle <= 65 and spasmFlag == 3:
             return True
         if 25 <= angle <= 65 and signal_val < 400 and spasmFlag == 2:
@@ -754,7 +755,8 @@ class Controller(threading.Thread):
                                 self.models.bluetoothHelper.setHealBandwith(self.view.bandwidth)
                                 self.view.bandwidth_changed = False
                             # 进行电刺激
-                            if self.models.stimulusJudge(angle, signals_val, lgtInformation['spasmFlag']):
+                            # TODO 修改电刺激函数
+                            if self.models.stimulusJudge(angle, signals_val):
                                 t += 1
                                 if not sensorStartFlag[sensor_i]:
                                     self.view.showpg(self.view.filtersignal_plt, ElecData, sensor_i, 'red')
@@ -837,7 +839,8 @@ class Controller(threading.Thread):
                             if self.view.value_changed:
                                 self.models.bluetoothHelper.setHealValue(self.view.value)
                                 self.view.value_changed = False
-                            if self.models.stimulusJudge(angle, signals_val, lgtInformation['spasmFlag']):
+                            # TODO 修改电刺激函数
+                            if self.models.stimulusJudge(angle, signals_val):
                                 t += 1
                                 print(t)
                                 if not sensorStartFlag[sensor_i]:

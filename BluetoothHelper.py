@@ -231,6 +231,7 @@ class BluetoothHelper(threading.Thread):
         async with BleakClientDotNet(self.address, loop=loop) as client:
             self.connected = client.is_connected
             print("Bluetooth Connected: {0}".format(self.connected))
+            # 开启通知
             await client.start_notify(self.UUID_READ, callback)
             try:
                 while self.Flag:
