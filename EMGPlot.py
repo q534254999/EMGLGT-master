@@ -1,6 +1,7 @@
 # import matplotlib.pyplot as plt
 import os
 import time
+
 import numpy as np
 import re
 import csv
@@ -12,10 +13,10 @@ import math
 # import librosa.display
 # import neurokit2 as nk
 import pandas as pd
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 from scipy import integrate
 from scipy.signal import butter, lfilter
-# from fcn_model import get_model
+from fcn_model import get_model
 
 # 记录时长
 RecordPeriod = 60
@@ -310,10 +311,10 @@ def dataPlot(dataFilePath):
     data = np.load(dataFilePath)
     print(data)
 
-    plt.plot(data)
+    # plt.plot(data)
 
 
-# dataRecordPeriod: Data recording duration
+# dataRecordPeriod: Data recording duration such as 20 min
 def data2csv(dataFilePath, dataRecordPeriod):
     path = str(dataFilePath)
     print(path)
@@ -343,7 +344,7 @@ def data2csv(dataFilePath, dataRecordPeriod):
 
 # dataRecordTime : data file path
 def calculateDiffTime(dataRecordTime,fatigueTime):
-    MatchPattern = 'D:/EMGData/(.*)_com3_data.npy'
+    MatchPattern = 'D:/zwp/EMGData/(.*)_COM[56]_data.npy'
     RecordTime = re.match(MatchPattern, dataRecordTime).group(1)
     # print(RecordTime)
     dataStructTime = time.strptime(RecordTime, '%Y_%m_%d_%H-%M-%S')
@@ -420,15 +421,22 @@ def bandpass_filter( data, lowcut, highcut, signal_freq, filter_order):
     y = lfilter(b, a, data)
     return y
 
-if __name__ == "__main__":
-    dataDirectory = 'D:/EMGData/'
+def convert():
+    dataDirectory = 'D:/zwp/EMGData/'
     fileList = os.listdir(dataDirectory)
     for file in fileList:
         if file.find('data') != -1:
             # print(file)
-            data2csv(dataDirectory+file, RecordPeriod)
+            data2csv(dataDirectory + file, RecordPeriod)
 
     print('convert succeed')
+
+
+
+
+
+if __name__ == "__main__":
+
 
 
     # 提取区间内最大值
@@ -441,7 +449,7 @@ if __name__ == "__main__":
     #
     #
     # 显示疲劳和非疲劳数据
-    # data = readCsv('D:/EMGData/2021_04_22_21-48-39_com3_data.csv')
+    data = readCsv('D:/zwp/EMGData/2021_04_22_21-48-39_com3_data.csv')
     #
     #
     # emg = data['data'][:1200]
@@ -471,42 +479,54 @@ if __name__ == "__main__":
     # plt.show()
     #
     # 训练模型
-    # x_train = np.array(data['data'])
-    # x_train = (x_train - np.min(x_train)) / (np.max(x_train) - np.min(x_train))
-    # y_train = np.array(data['label'])
-    # y_train = y_train.reshape((-1, 1))
-    # x_data = []
-    # y_data = []
-    # i = 0
-    # while i*5+60<len(x_train):
-    #     x_data.append(x_train[i*5:i*5+60])
-    #     y_data.append(y_train[i*5:i*5+60])
-    #     i+=1
-    # x_data = np.array(x_data)
-    # y_data = np.array(y_data)
+
+    x_train = np.array(data['data'])
+    # 归一化
+    x_train = (x_train - np.min(x_train)) / (np.max(x_train) - np.min(x_train))
+    y_train = np.array(data['label'])
+    y_train = y_train.reshape((-1, 1))
+    x_data = []
+    y_data = []
+    i = 0
+    while i*5+60 < len(x_train):
+        x_data.append(x_train[i*5:i*5+60])
+        y_data.append([1 if (np.count_nonzero(y_train[i*5:i*5+60])/30)>=1 else 0])
+        i += 1
+    x_data = np.array(x_data)
+    y_data = np.array(y_data)
+    print(x_data)
+    print(x_data.shape)
+    print(y_data)
+    print(y_data.shape)
     #
     #
-    # model = get_model()
-    # # model = keras.models.load_model("my_model")
+    model = get_model()
+    # model = keras.models.load_model("my_model")
     #
-    # # adam = opt.Adam(model.parameters(), lr=0.001)
-    # # loss_fn = nn.CrossEntropyLoss()
-    # rand = np.arange(y_data.shape[0])
-    # print(rand)
-    # np.random.shuffle(rand)
-    # x_data = x_data[rand]
-    # y_data = y_data[rand]
-    #
-    # history = model.fit(
-    #     x_data,
-    #     y_data,
-    #     batch_size=500,
-    #     epochs=3200,
-    #     validation_split=0.1
-    # )
-    #
+    # adam = opt.Adam(model.parameters(), lr=0.001)
+    # loss_fn = nn.CrossEntropyLoss()
+    rand = np.arange(y_data.shape[0])
+    print(rand)
+    np.random.shuffle(rand)
+    x_data = x_data[rand]
+    y_data = y_data[rand]
+
+    history = model.fit(
+        x_data,
+        y_data,
+        batch_size=128,
+        epochs=3200,
+        validation_split=0.1
+    )
+
     # model.save("my_model")
-    #
+    # model = loadModel()
+    # print(model.predict(x_data))
+
+    # plt.plot(history.epoch,history.history.get('loss'))
+    # plt.show()
+    # plt.plot(history.epoch, history.history.get('acc'))
+    # plt.show()
     #
     # plt.plot(data_f, 'r')
     # # data_nf = data_nf[data_nf>0]
@@ -573,6 +593,8 @@ if __name__ == "__main__":
     # plt.subplot(2,1,2)
     # plt.plot(peakLoc)
     # plt.show()
+
+
 
 
 

@@ -2,14 +2,9 @@
 """
 Created on Thu Oct 22 19:44:40 2020
 
-@author: wzy
+@author:
 """
-
-# import torch
-# import torch.nn as nn
-# import torch.nn.functional as F
-# import torch.optim as opt
-# import numpy as np
+import tensorflow
 from tensorflow import keras
 from tensorflow.keras.layers import Dense, Input, Dropout, Convolution1D, MaxPool1D, GlobalMaxPool1D, GlobalAveragePooling1D, \
     concatenate
@@ -68,6 +63,8 @@ import numpy as np
 
 
 def get_model():
+    config = tensorflow.compat.v1.ConfigProto(gpu_options=tensorflow.compat.v1.GPUOptions(allow_growth=True))
+    sess = tensorflow.compat.v1.Session(config=config)
     nclass = 1
     inp = Input(shape=(60, 1))
     img_1 = Convolution1D(16, kernel_size=5, activation="relu", padding="valid")(inp)
@@ -85,24 +82,27 @@ def get_model():
 
     dense_1 = Dense(64, activation="relu", name="dense_1")(img_1)
     dense_1 = Dense(64, activation="relu", name="dense_2")(dense_1)
-    dense_1 = Dense(nclass,  activation="sigmoid" ,name="output")(dense_1)
+    dense_1 = Dense(nclass,  activation="sigmoid", name="output")(dense_1)
 
     model = keras.models.Model(inputs=inp, outputs=dense_1)
     opt = keras.optimizers.Adam(1e-4)
 
-    model.compile(optimizer=opt, loss=keras.losses.mean_squared_error, metrics=['acc'])
+    model.compile(optimizer=opt, loss=keras.losses.binary_crossentropy, metrics=['acc'])
     model.summary()
     return model
 
 
 # non_fatigues_x = np.load('non_fatigues_data.npy')
 # non_fatigues_y = np.zeros((non_fatigues_x.shape[0],1))
+#
+#
+#
 # fatigues_x = np.load('fatigues_data.npy')
 # fatigues_y = np.ones((fatigues_x.shape[0],1))
 # x_train = np.concatenate((non_fatigues_x,fatigues_x))
 # y_train = np.concatenate((non_fatigues_y,fatigues_y))
-
-
+#
+#
 # x_train = np.load('jb_data_x.npy')
 # y_train = np.load('jb_data_y.npy')
 # y_train = y_train.reshape((-1,1))
